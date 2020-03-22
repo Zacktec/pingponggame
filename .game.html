@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>pingPongG</title>
+        <meta charset="UTF-8">
+
+    </head>
+    <body>
+        <div id="d"> #firsttestgame#js#canvas#colors </div>
+        <canvas id="pong" width="600" height="400"></canvas>
+    </body>
+    <style>
+            body{
+                background-color: #000000;
+            }
+            #pong{
+                border: 2px solid #00ff6a;
+                position: absolute;
+                margin :auto;
+                top:0;
+                right:0;
+                left:0;
+                bottom:0;
+            }
+            #d {
+                color: #00ff6a;
+                font-size:  1.7em;
+                font-family: 'Courier New', Courier, monospace;
+            }
+        </style>
+
+
+<script>
+const canvas=document.getElementById("pong");
+const context=canvas.getContext('2d');
+
+var user=
+{
+    x: 0,
+    y: canvas.height/2 -50,
+    width: 10,
+    height: 100,
+    color: "WHITE",
+    score: 0
+}
+var com=
+{
+    x: canvas.width -10,
+    y: canvas.height/2 -50,
+    width: 10,
+    height: 100,
+    color: "WHITE",
+    score: 0
+}
+var ball =
+{
+    x:canvas.width/2,
+    y:canvas.height/2,
+    speed:9,
+    velocityX: 5,
+    velocityY: 5,
+    radius:10, //r//
+    color:"WHITE"
+}
+var net=
+{
+    x:canvas.width/2 -1,
+    y: 0,
+    width: 2,
+    height:10,
+    color:"WHITE"
+}                       
+function drawRect(x,y,w,h,color)
+{
+    context.fillStyle = color;
+    context.fillRect(x,y,w,h);
+}
+function drawCircle(x,y,r,color)
+{
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(x,y,r,0,Math.PI*2,false);
+    context.closePath();
+    context.fill();
+}
+function drawText(text,x,y,color)
+{
+    context.fillStyle=color;
+    context.font= "75px fantasy";
+    context.fillText(text,x,y);
+}
+function drawNet()
+
+{
+    for(var i=0;i<canvas.height;i=i+15)
+    {drawRect(net.x,net.y+i,net.width,net.height,net.color);}
+    
+}
+
+
+//mouseControl:
+canvas.addEventListener("mousemove",movePaddle);
+function movePaddle(evt)
+{
+    var rect = canvas.getBoundingClientRect();
+    user.y=evt.clientY - rect.top - user.height/2;
+}
+function render()
+{
+    //clear the canvas:
+    drawRect(0,0,canvas.width,canvas.height,"BLACK");
+    //draw net:
+    drawNet();
+    //draw score:
+    drawText(user.score,canvas.width/4,canvas.height/4,"WHITE");
+    drawText(com.score,3*canvas.width/4,canvas.height/4,"WHITE");
+    //draw user and com paddle:
+    drawRect(user.x,user.y,user.width,user.height,user.color);
+    drawRect(com.x,com.y,com.width,com.height,com.color);
+    //draw the ball 
+    drawCircle(ball.x,ball.y,ball.radius,ball.color);
+
+}
+function collision(b,p){
+    p.top = p.y;
+    p.bottom = p.y + p.height;
+    p.left = p.x;
+    p.right = p.x + p.width;
+    
+    b.top = b.y - b.radius;
+    b.bottom = b.y + b.radius;
+    b.left = b.x - b.radius;
+    b.right = b.x + b.radius;
+    
+    return p.left < b.right && p.top < b.bottom && p.right > b.left && p.bottom > b.top;
+}
+
+function update()
+{
+    ball.x=ball.x+ball.velocityX;
+    ball.y=ball.y+ball.velocityY;
+    //AI com:
+    var computerLevel=0.2;
+    com.y+=+(ball.y - (com.y+com.height/2))* computerLevel;
+
+    if(ball.y +ball.radius > canvas.height || ball.y - ball.radius <0 ) { ball.velocityY= -ball.velocityY; }
+
+    var player =(ball.x < canvas.width/2) ? user:com;
+    if ( collision(ball,player)) { var collidePoint= (ball.y - (player.y +player.height/2)); //distance_diff
+                                   collidePoint=collidePoint / (player.height/2);
+                                   
+                                   var angleRad = (Math.PI/4)*collidePoint;
+                                   var direction= (ball.x < canvas.width/2) ? 1 : -1 ;
+
+                                   ball.velocityX=direction*ball.speed*Math.cos(angleRad);
+                                   ball.velocityY=ball.speed*Math.sin(angleRad);
+
+                                   ball.speed=ball.speed+1;
+                                  }
+    //update score:
+    if( ball.x - ball.radius < 0 ) { com.score++; resetBall(); } 
+    else if(ball.x + ball.radius > canvas.width) { user.score++; resetBall(); }
+}
+function resetBall()
+{
+    ball.x= canvas.width/2;
+    ball.y= canvas.height/2;
+    ball.speed= 5;
+    ball.velocityX = -ball.velocityX ;
+}
+
+function game() 
+{
+    update();
+    render();
+   
+}
+var framePerSecond= 50;
+setInterval(game,1000/framePerSecond);
+
+</script>
